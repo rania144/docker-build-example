@@ -1,0 +1,34 @@
+name: Build and Push Docker Image
+
+# Déclenche le workflow lors d'un push sur la branche main
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest  # Utilise la machine virtuelle Ubuntu pour exécuter le job
+
+    steps:
+    # Étape 1 : Récupérer le code du dépôt
+    - name: Check out the repository
+      uses: actions/checkout@v2  # Action pour récupérer le code source du dépôt
+
+    # Étape 2 : Se connecter à DockerHub
+    - name: Log in to DockerHub
+      uses: docker/login-action@v2  # Action pour se connecter à DockerHub
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}  # Nom d'utilisateur DockerHub (à configurer dans les secrets)
+        password: ${{ secrets.DOCKER_PASSWORD }}  # Mot de passe DockerHub ou token d'accès
+
+    # Étape 3 : Construire l'image Docker
+    - name: Build Docker image
+      run: |
+        docker build -t mydockerhubusername/myapp:$GITHUB_SHA .  # Nom de l'image avec le commit comme tag
+
+    # Étape 4 : Pousser l'image Docker sur DockerHub
+    - name: Push Docker image to DockerHub
+      run: |
+        docker push mydockerhubusername/myapp:$GITHUB_SHA  # Pousse l'image sur DockerHub
+
