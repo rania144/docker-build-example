@@ -1,30 +1,48 @@
-name: Build and Push Docker image
+name: CI/CD Pipeline
 
+# Déclencheur pour le workflow (lors d'un push ou d'une pull request sur la branche main)
 on:
   push:
     branches:
-      - main  # ou la branche de votre choix
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  build:
-    runs-on: ubuntu-latest  # Utilisation de l'image Ubuntu la plus récente
-    
+  # Job pour l'intégration continue (compilation, tests)
+  build_and_test:
+    runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2  # Récupère le code source du dépôt
+        uses: actions/checkout@v3
 
-      - name: Log in to DockerHub
-        uses: docker/login-action@v2  # Utilise l'action pour se connecter à DockerHub
+      - name: Set up Node.js (si vous utilisez Node.js, sinon adaptez)
+        uses: actions/setup-node@v3
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}  # Utilise le secret DOCKER_USERNAME
-          password: ${{ secrets.DOCKER_PASSWORD }}  # Utilise le secret DOCKER_PASSWORD
+          node-version: '14'  # Spécifiez la version Node.js à utiliser
 
-      - name: Build Docker image
-        run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/my-app:latest .  # Construire l'image Docker
+      - name: Install dependencies
+        run: npm install  # Remplacez par la commande appropriée pour votre projet (ex: pip install pour Python)
 
-      - name: Push Docker image to DockerHub
+      - name: Run tests
+        run: npm test  # Remplacez par la commande appropriée pour vos tests
+
+  # Job pour le déploiement
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build_and_test  # Ce job attend la fin du job précédent
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Deploy to server
         run: |
-          docker push ${{ secrets.DOCKER_USERNAME }}/my-app:latest  # Pousser l'image sur DockerHub
+          echo "Déploiement de l'application..."
+          # Ajoutez ici les étapes pour déployer sur votre serveur
+          # Exemple: `scp -r ./build user@server:/path/to/deploy`
+
 
 
